@@ -14,8 +14,8 @@ ii. Posts are displayed as cards with the day of creation, the name of the user,
 2) comments; the comments icon is clickable and displays the comments under the post. You can reply to comments, and if there are more than 5 comments, there is a “see more” option that expands them by 5 each time. There is also an **Add Comment** button that opens a box (text area with kaomoji keyboard, a button to add images with a limit of 3 images, a submit button, and a cancel button). Clicking outside the box also closes it.  
 iii. On the corner of each post card, there are 3 dots. When clicked, the options are: **Report**, **Don’t show post**, and **Cancel**.  
 iv. Posts can be filtered in 2 ways:  
-1) **Recent** (by date)  
-2) **Trending** (by highest number of engagements such as reactions and comments). The feed is scrollable.  
+1) recent (by date)  
+2) trending (by highest number of engagements such as reactions and comments). The feed is scrollable.  
 v. Currently, there is no limit on the number of characters in a post.  
 vi. Posts cannot be empty.  
 vii. You can see comments on other users’ posts and reply to them and react to them, but you cannot see who reacted or how many reactions were made on comments.
