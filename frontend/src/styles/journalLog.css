@@ -1,0 +1,209 @@
+.journal-log-page {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+.journal-log-container {
+  width: 100%;
+  max-width: 900px;
+  padding: 20px;
+  color: #eaeaea;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+}
+
+.journal-back-btn {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  background: none;
+  border: none;
+  color: #6bb397;
+  font-size: 28px;
+  cursor: pointer;
+}
+
+.journal-log-title {
+  font-size: 32px;
+  margin-bottom: 20px;
+  color: #6bb397;
+  text-align: center;
+}
+
+.month-selector {
+  display: flex;
+  align-items: center;
+  gap: 25px;
+  margin-bottom: 20px;
+}
+
+.month-selector button {
+  background: none;
+  border: 1px solid #6bb397;
+  padding: 4px 12px;
+  border-radius: 8px;
+  color: #6bb397;
+  cursor: pointer;
+  font-size: 20px;
+}
+
+.month-selector span {
+  font-size: 20px;
+}
+
+.calendar-wrapper {
+  width: 100%;
+  max-width: 700px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.weekdays-row {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  width: 100%;
+  text-align: center;
+  font-size: 14px;
+  color: #bfbfbf;
+}
+
+.weekday {
+  padding: 6px 0;
+}
+
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 8px;
+  width: 100%;
+}
+
+.calendar-day,
+.empty-cell {
+  background: #1a1a1a;
+  border: 1px solid #2a2a2a;
+  border-radius: 10px;
+  padding: 10px;
+  min-height: 90px;
+  cursor: pointer;
+  position: relative;
+}
+
+.calendar-day:hover {
+  background: #262626;
+}
+
+.day-number {
+  font-size: 16px;
+}
+
+.entry-squares {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: 10px;
+}
+
+.entry-square {
+  width: 18px;
+  height: 18px;
+  border-radius: 6px;
+}
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(2px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.modal-content {
+  background: #1c1c1c;
+  padding: 25px;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 450px;
+  max-height: 80vh;
+  overflow-y: auto;
+  border: 1px solid #333;
+}
+
+.modal-entry {
+  background: #262626;
+  padding: 12px;
+  border-radius: 12px;
+  margin-bottom: 12px;
+}
+
+.modal-entry p {
+  white-space: normal;
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+  word-break: break-word;
+}
+
+
+.modal-entry h3 {
+  color: #6bb397;
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+
+.modal-mood {
+  font-size: 14px;
+  color: #a97fcc;
+  margin-bottom: 8px;
+}
+
+.expand-btn {
+  background: none;
+  border: none;
+  color: #6bb397;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.expand-btn:hover {
+  text-decoration: underline;
+}
+
+@media (max-width: 700px) {
+
+  .calendar-day,
+  .empty-cell {
+    min-height: 70px;
+  }
+
+  .entry-square {
+    width: 14px;
+    height: 14px;
+  }
+}
+
+@media (max-width: 450px) {
+
+  .calendar-day,
+  .empty-cell {
+    min-height: 60px;
+  }
+
+  .entry-square {
+    width: 12px;
+    height: 12px;
+  }
+
+  .journal-log-title {
+    font-size: 26px;
+  }
+
+  .month-selector span {
+    font-size: 18px;
+  }
+}

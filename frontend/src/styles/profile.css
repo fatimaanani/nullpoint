@@ -1,0 +1,276 @@
+/* Global Reset to remove click borders/outlines */
+*:focus {
+  outline: none !important;
+}
+
+.profile-container {
+  background-color: #1e1e1e;
+  color: #eaeaea;
+  width: 100%;
+  min-height: 100vh;
+  padding: 30px 20px 100px;
+  box-sizing: border-box;
+  display: flex;
+  justify-content: center;
+  overflow-y: auto;
+}
+
+.profile-layout {
+  display: flex;
+  width: 100%;
+  max-width: 900px;
+  gap: 40px;
+}
+
+.profile-left {
+  flex: 0 0 120px;
+  display: flex;
+  justify-content: center;
+}
+
+.profile-icon {
+  width: 110px;
+  height: 110px;
+  border-radius: 50%;
+  border: 2px solid #6bb397;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 20px;
+  background: #111417;
+}
+
+.gender-symbol {
+  width: 50px;
+  height: 50px;
+}
+
+.gender-symbol.female { color: #f3b8d9; }
+.gender-symbol.male { color: #b8c9ff; }
+.gender-symbol.neutral { color: #d9b8e6; }
+.gender-symbol.placeholder { color: #333; }
+
+.profile-right {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.profile-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.profile-name {
+  font-size: 28px;
+  font-weight: 600;
+  margin: 0;
+  color: #6bb397;
+}
+
+.gender-dropdown-container {
+  position: relative;
+}
+
+.gender-toggle {
+  background: #111417;
+  border: 1px solid #2a2f32;
+  color: #9b9b9b;
+  padding: 8px 16px;
+  border-radius: 20px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+}
+
+.gender-toggle.locked {
+  cursor: default;
+  opacity: 0.8;
+  border-color: #333;
+}
+
+.gender-menu {
+  position: absolute;
+  top: 110%;
+  right: 0;
+  background: #111417;
+  border: 1px solid #2a2f32;
+  border-radius: 12px;
+  width: 160px;
+  z-index: 10;
+  overflow: hidden;
+}
+
+.gender-option {
+  padding: 10px 16px;
+  color: #eaeaea;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.gender-option:hover {
+  background: #1e1e1e;
+  color: #6bb397;
+}
+
+.profile-box {
+  background-color: #111417;
+  border: 1px solid #2a2f32;
+  border-radius: 16px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  box-sizing: border-box;
+  /* Added to ensure long text doesn't push the box width */
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+  word-break: break-word;
+}
+
+.box-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+.label {
+  font-size: 14px;
+  color: #9b9b9b;
+  margin: 0;
+  letter-spacing: 0.5px;
+}
+
+.edit-btn {
+  background: none;
+  border: none;
+  color: #6bb397;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.about-content-wrapper {
+  width: 100%;
+}
+
+.about-text {
+  font-size: 15px;
+  color: #eaeaea;
+  margin: 0;
+  line-height: 1.6;
+  width: 100%;
+  /* Fixes text wrapping */
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+.about-input {
+  width: 100%;
+  max-width: 100%;
+  background: #1e1e1e;
+  border: 1px solid #333;
+  color: #eaeaea;
+  border-radius: 8px;
+  padding: 12px;
+  min-height: 100px;
+  resize: none;
+  font-family: inherit;
+  font-size: 15px;
+  box-sizing: border-box;
+  display: block;
+}
+
+.info-details p {
+  margin: 5px 0;
+  color: #9b9b9b;
+  font-size: 15px;
+  word-break: break-all;
+}
+
+.info-value {
+  color: #eaeaea;
+  margin-left: 5px;
+}
+
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.tag {
+  background: #1e1e1e;
+  border: 1px solid #333;
+  padding: 6px 14px;
+  border-radius: 30px;
+  color: #6bb397;
+  font-size: 13px;
+}
+
+.thoughts-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.thought-card {
+  background: #1e1e1e;
+  border: 1px solid #333;
+  border-radius: 10px;
+  padding: 12px;
+  overflow-wrap: break-word;
+}
+
+.thought-date {
+  font-size: 12px;
+  color: #9b9b9b;
+  margin-bottom: 4px;
+}
+
+.thought-content {
+  font-size: 14px;
+  color: #eaeaea;
+  margin: 0;
+  white-space: pre-wrap;
+}
+
+.see-all-btn {
+  background: none;
+  border: none;
+  color: #6bb397;
+  cursor: pointer;
+  font-size: 14px;
+  align-self: flex-start;
+  padding: 0;
+}
+
+@media (max-width: 768px) {
+  .profile-layout {
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+  }
+  
+  .profile-left {
+    flex: none;
+  }
+
+  .profile-header {
+    flex-direction: column;
+    gap: 15px;
+    text-align: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .profile-box {
+    padding: 15px;
+  }
+}

@@ -1,0 +1,92 @@
+.authentication-page {
+  width: 100%;
+  min-height: 100vh;
+  background-color: #1e1e1e;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+  box-sizing: border-box; /* Ensures padding doesn't add to width */
+}
+
+.authentication-card {
+  background: #111417;
+  border: 1px solid #2a2f32;
+  border-radius: 20px;
+  padding: 30px;
+  width: 100%;
+  max-width: 400px;
+  max-height: 90vh; /* Prevents card from going off screen vertically */
+  overflow-y: auto; /* Adds scrollbar inside card if content is too tall */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+
+/* Hide scrollbar for a cleaner look while keeping functionality */
+.authentication-card::-webkit-scrollbar {
+  width: 0px;
+}
+
+.authentication-brand-logo {
+  width: 70px;
+  height: 70px;
+}
+
+.authentication-heading {
+  color: #6bb397;
+  font-size: 22px;
+  margin: 0;
+}
+
+.authentication-form-element {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.authentication-input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  text-align: left; /* Aligns labels to the left */
+}
+
+.authentication-input-group label {
+  font-size: 13px;
+  color: #9b9b9b;
+}
+
+.authentication-input-group input {
+  background: #1c1c1c;
+  border: 1px solid #333;
+  border-radius: 10px;
+  padding: 12px;
+  color: #eaeaea;
+  font-size: 14px;
+}
+
+.authentication-confirm-button {
+  background-color: #6bb397;
+  color: #0e1713;
+  border: none;
+  padding: 14px;
+  border-radius: 10px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 5px;
+}
+
+@media (max-width: 480px) {
+  .authentication-card {
+    padding: 20px;
+    border-radius: 16px;
+  }
+  
+  .authentication-heading {
+    font-size: 20px;
+  }
+}
