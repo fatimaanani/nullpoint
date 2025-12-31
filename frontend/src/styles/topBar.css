@@ -11,7 +11,6 @@
   backdrop-filter: blur(12px); 
   border-bottom: 1px solid #2a2f32;
   box-sizing: border-box;
-  /* Removed top padding entirely */
   /* padding: 0 20px;  */
 }
 
@@ -22,7 +21,6 @@
   align-items: center;
   /* justify-content: space-between; */
   width: 100%;
-  /* Ensures items touch the top/bottom boundaries of the bar */
   height: 55px; 
 }
 
@@ -30,7 +28,6 @@
   font-size: 32px; 
   font-weight: 700;
   color: #6bb397; 
-  /* Crucial: removes default browser margin that creates "fake" padding */
   margin: 0; 
   padding: 0;
   line-height: 1;
@@ -49,7 +46,6 @@
 }
 
 .topbar-logo {
-  /* Height is now the master; width auto-adjusts so it NEVER squeezes */
   height: 55px;
   width: auto; 
   display: block;
