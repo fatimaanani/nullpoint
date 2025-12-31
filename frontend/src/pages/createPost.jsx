@@ -5,6 +5,7 @@ import TopBar from "../components/topBar";
 import EmojiPicker from "emoji-picker-react";
 import { useDropzone } from "react-dropzone";
 import kaomojilib from "kaomojilib";
+import axios from "axios";
 
 function buildKaomojiCategories() {
   const kaomojiLibrary = kaomojilib?.library || {};
@@ -82,7 +83,8 @@ function CreatePost() {
     setShowKaomojiPopup(false);
   };
 
-  const handleSubmit = (event) => {
+  // ✅ FIXED SUBMIT
+  const handleSubmit = async (event) => {
     event.preventDefault();
 
     if (!postText.trim() && uploadedImages.length === 0) {
@@ -91,12 +93,36 @@ function CreatePost() {
       return;
     }
 
-    setFeedbackMessage("Post submitted successfully (๑˃̵ᴗ˂̵)و");
-    setTimeout(() => setFeedbackMessage(""), 2000);
+    const userId = localStorage.getItem("user_id");
 
-    setPostText("");
-    setUploadedImages([]);
-    setIsAnonymousPost(false);
+    const formData = new FormData();
+    formData.append("user_id", userId);
+    formData.append("content", postText);
+    formData.append("is_anonymous", isAnonymousPost);
+
+    uploadedImages.forEach((img) => {
+      formData.append("images", img, img.name);
+    });
+
+    try {
+      const response = await axios.post(
+        "http://localhost:5000/posts/create",
+        formData,
+        { headers: { "Content-Type": "multipart/form-data" } }
+      );
+
+      if (response.data.success) {
+        setFeedbackMessage("Post submitted successfully (๑˃̵ᴗ˂̵)و");
+        setTimeout(() => setFeedbackMessage(""), 2000);
+
+        setPostText("");
+        setUploadedImages([]);
+        setIsAnonymousPost(false);
+      }
+    } catch (error) {
+      setFeedbackMessage("Something went wrong ＞︿＜");
+      setTimeout(() => setFeedbackMessage(""), 2000);
+    }
   };
 
   useEffect(() => {
@@ -166,8 +192,8 @@ function CreatePost() {
                     <EmojiPicker
                       theme="dark"
                       onEmojiClick={addEmojiToText}
-                      skinTonesDisabled={true}
-                      searchDisabled={true}
+                      skinTonesDisabled
+                      searchDisabled
                       previewConfig={{ showPreview: false }}
                     />
                   </div>

@@ -1,4 +1,3 @@
-/* Global Reset to remove click borders/outlines */
 *:focus {
   outline: none !important;
 }
@@ -166,7 +165,6 @@
   margin: 0;
   line-height: 1.6;
   width: 100%;
-  /* Fixes text wrapping */
   white-space: pre-wrap;
   word-wrap: break-word;
 }
@@ -273,4 +271,28 @@
   .profile-box {
     padding: 15px;
   }
+}
+.moods-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.mood-pill {
+  padding: 6px 14px;
+  border-radius: 999px;
+  border: 1px solid #6bb397;
+  color: #6bb397;
+  font-size: 13px;
+  background: transparent;
+  cursor: default;
+  transition: background-color 0.2s ease;
+}
+
+.mood-pill:hover {
+  background-color: #1e1e1e;
+}
+
+.empty-text {
+  font-size: 15px;
 }

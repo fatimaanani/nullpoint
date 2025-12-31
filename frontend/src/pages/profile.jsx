@@ -14,6 +14,8 @@ function Profile() {
   const [email, setEmail] = useState("");
   const [fullName, setFullName] = useState("");
 
+  const [mostUsedMoods, setMostUsedMoods] = useState([]);
+
   const navigate = useNavigate();
   const userId = localStorage.getItem("user_id");
 
@@ -28,6 +30,17 @@ function Profile() {
         setAbout(res.data.about || "");
       })
       .catch(() => {});
+  }, [userId]);
+
+  useEffect(() => {
+    axios
+      .get(`http://localhost:5000/profile/${userId}/moods`)
+      .then((res) => {
+        setMostUsedMoods(res.data);
+      })
+      .catch(() => {
+        setMostUsedMoods([]);
+      });
   }, [userId]);
 
   const handleGenderSelect = async (value) => {
@@ -48,7 +61,7 @@ function Profile() {
       }
     } catch (error) {}
   };
-  
+
   const getIcon = () => {
     if (gender === "female") return <Venus className="gender-symbol female" />;
     if (gender === "male") return <Mars className="gender-symbol male" />;
@@ -145,6 +158,21 @@ function Profile() {
                 <p className="about-text">
                   {about || "No bio yet ＞︿＜"}
                 </p>
+              )}
+            </div>
+          </div>
+
+          <div className="profile-box">
+            <p className="label">Most Used Moods</p>
+            <div className="moods-container">
+              {mostUsedMoods.length > 0 ? (
+                mostUsedMoods.map((mood, index) => (
+                  <span key={index} className="mood-pill">
+                    {mood.tag_name.charAt(0).toUpperCase() + mood.tag_name.slice(1)}
+                  </span>
+                ))
+              ) : (
+                <p className="empty-text">No moods yet ＞︿＜ </p>
               )}
             </div>
           </div>

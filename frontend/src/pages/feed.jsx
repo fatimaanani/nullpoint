@@ -4,18 +4,7 @@ import TopBar from "../components/topBar";
 import EmojiPicker from "emoji-picker-react";
 import { useDropzone } from "react-dropzone";
 import kaomojilib from "kaomojilib";
-
-const posts = [
-  { id: 1, username: "Anonymous User", content: "Lorem ipsum dolor sit amet.", date: "1d ago" },
-  { id: 2, username: "Anonymous User", content: " In enim justo, rhoncus ut, imperdiet a, venenatis vitae, justo. Nullam dictum felis eu pede mollis pretium. .", date: "2d ago" },
-  {
-    id: 3,
-    username: "Anonymous User",
-    content:
-      "lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. Aenean massa. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Donec quam felis, ultricies nec, pellentesque eu, pretium quis, sem. Nulla consequat massa quis enim. Donec pede justo, fringilla vel, aliquet nec, vulputate eget, arcu",
-    date: "3d ago",
-  },
-];
+import axios from "axios";
 
 const kaomojiList = Object.values(kaomojilib?.library || {}).map(
   (item) => item.icon
@@ -33,9 +22,18 @@ function Feed() {
   const [commentFeedback, setCommentFeedback] = useState("");
   const [isAddingComment, setIsAddingComment] = useState(false);
 
+  const [posts, setPosts] = useState([]);
+
   const reactionReference = useRef(null);
   const menuReference = useRef(null);
   const commentBoxReference = useRef(null);
+
+  useEffect(() => {
+    axios
+      .get("http://localhost:5000/feed")
+      .then((res) => setPosts(res.data))
+      .catch(() => setPosts([]));
+  }, []);
 
   useEffect(() => {
     function handleClickOutside(event) {
@@ -145,18 +143,18 @@ function Feed() {
 
       <div className="posts-list">
         {posts.map((post) => (
-          <div className="post-card" key={post.id}>
+          <div className="post-card" key={post.post_id}>
             <div className="post-header">
-              <span className="username">[ Anonymous User Post ]</span>
+              <span className="username">[ {post.username} ]</span>
 
               <span
                 className="dots-menu"
-                onClick={() => handleMenuClick(post.id)}
+                onClick={() => handleMenuClick(post.post_id)}
               >
                 ⋯
               </span>
 
-              {openMenuForPost === post.id && (
+              {openMenuForPost === post.post_id && (
                 <div className="menu-popup" ref={menuReference}>
                   <button>Don’t show this post</button>
                   <button>Report post</button>
@@ -172,15 +170,28 @@ function Feed() {
 
             <p className="content">{post.content}</p>
 
+            {post.images && post.images.length > 0 && (
+              <div className="post-images">
+                {post.images.map((img, index) => (
+                  <img
+                    key={index}
+                    src={`http://localhost:5000/uploads/${img}`}
+                    alt="post"
+                    className="post-image"
+                  />
+                ))}
+              </div>
+            )}
+
             <div className="post-actions">
               <span
                 className="react-btn"
-                onClick={() => handleReactionClick(post.id)}
+                onClick={() => handleReactionClick(post.post_id)}
               >
                 •ᴗ•
               </span>
 
-              {openReactionForPost === post.id && (
+              {openReactionForPost === post.post_id && (
                 <div className="reaction-picker" ref={reactionReference}>
                   <div
                     className="reaction-close"
@@ -199,15 +210,17 @@ function Feed() {
 
               <span
                 className="comment-btn"
-                onClick={() => handleCommentToggle(post.id)}
+                onClick={() => handleCommentToggle(post.post_id)}
               >
                 ☰
               </span>
             </div>
 
-            <span className="date">{post.date}</span>
+            <span className="date">
+              {new Date(post.creation_date).toLocaleDateString()}
+            </span>
 
-            {openCommentsForPost === post.id && (
+            {openCommentsForPost === post.post_id && (
               <div className="comments-section">
                 {!isAddingComment && (
                   <button
@@ -224,15 +237,12 @@ function Feed() {
                       className="comment-input"
                       placeholder="Write something..."
                       value={commentText}
-                      onChange={(event) =>
-                        setCommentText(event.target.value)
-                      }
+                      onChange={(e) => setCommentText(e.target.value)}
                     />
 
                     <div className="comment-actions">
                       <button
                         className="comment-kaomoji"
-                        type="button"
                         onClick={() =>
                           setShowCommentKaomoji(!showCommentKaomoji)
                         }
@@ -251,7 +261,6 @@ function Feed() {
                         {kaomojiList.slice(0, 120).map((icon, index) => (
                           <button
                             key={index}
-                            type="button"
                             className="comment-kaomoji-item"
                             onClick={() => addKaomojiToComment(icon)}
                           >
@@ -263,10 +272,10 @@ function Feed() {
 
                     {commentImages.length > 0 && (
                       <div className="comment-preview-row">
-                        {commentImages.map((image, index) => (
+                        {commentImages.map((img, index) => (
                           <img
                             key={index}
-                            src={image.preview}
+                            src={img.preview}
                             alt="preview"
                             className="comment-preview-img"
                           />
@@ -283,14 +292,12 @@ function Feed() {
                     <div className="modal-buttons">
                       <button
                         className="close-comment"
-                        type="button"
                         onClick={() => setIsAddingComment(false)}
                       >
                         Cancel
                       </button>
                       <button
                         className="submit-comment"
-                        type="button"
                         onClick={handleCommentSubmit}
                       >
                         Submit

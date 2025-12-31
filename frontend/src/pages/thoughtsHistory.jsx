@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import TopBar from "../components/topBar";
 import "../styles/thoughtsHistory.css";
 import kaomojilib from "kaomojilib";
+import axios from "axios";
 
 function buildKaomojiCategories() {
   const kaomojiLibrary = kaomojilib?.library || {};
@@ -45,6 +46,8 @@ const kaomojiTabs = [
 function ThoughtsHistory() {
   const navigate = useNavigate();
 
+  const [posts, setPosts] = useState([]);
+
   const [openReactionsPostId, setOpenReactionsPostId] = useState(null);
   const [openCommentsPostId, setOpenCommentsPostId] = useState(null);
   const [isReplying, setIsReplying] = useState(null);
@@ -57,25 +60,18 @@ function ThoughtsHistory() {
   const kaomojiRef = useRef(null);
   const fileInputRef = useRef(null);
 
-  const posts = [
-    {
-      id: 1,
-      date: "2 days ago",
-      content: "Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. Aenean massa. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Donec quam felis, ultricies nec, pellentesque eu, pretium quis, sem. Nulla consequat massa quis enim. Donec pede justo, fringilla vel, aliquet nec, vulputate eget, arcu. In enim justo, rhoncus ut, imperdiet a, venenatis vitae, justo. Nullam dictum felis eu pede mollis pretium. Integer tincidunt.",
-      reactions: [
-        { user: "Fatima", emoji: "💔" },
-        { user: "Emily", emoji: "❤️" },
-        { user: "Anonymous User", emoji: "👍" }
-      ],
-      comments: [
-        {
-          id: 1,
-          text: "Proud of you.",
-          replies: []
-        }
-      ]
-    }
-  ];
+  useEffect(() => {
+    const userId = localStorage.getItem("user_id");
+
+    axios
+      .get(`http://localhost:5000/profile/thoughts-history/${userId}`)
+      .then((res) => {
+        setPosts(res.data);
+      })
+      .catch(() => {
+        setPosts([]);
+      });
+  }, []);
 
   useEffect(() => {
     function handleClickOutside(e) {
@@ -102,23 +98,46 @@ function ThoughtsHistory() {
     e.target.value = null;
   };
 
-  const submitReply = (comment) => {
+  const submitReply = async (comment, postId) => {
     if (!replyText.trim() && replyImages.length === 0) {
       setReplyFeedback("You submitted an empty reply (╯°□°）╯︵ ┻━┻");
       setTimeout(() => setReplyFeedback(""), 2000);
       return;
     }
 
-    comment.replies.push(replyText);
+    const userId = localStorage.getItem("user_id");
 
-    setReplyFeedback("Reply submitted successfully (๑˃̵ᴗ˂̵)و");
-    setTimeout(() => setReplyFeedback(""), 2000);
+    try {
+      const response = await axios.post(
+        "http://localhost:5000/comments/reply",
+        {
+          user_id: userId,
+          post_id: postId,
+          parent_comment_id: comment.comment_id,
+          content: replyText
+        }
+      );
 
-    setReplyText("");
-    setReplyImages([]);
-    setIsReplying(null);
-    setShowKaomojiPopup(null);
+      if (response.data.success) {
+        setReplyFeedback("Reply submitted successfully (๑˃̵ᴗ˂̵)و");
+        setTimeout(() => setReplyFeedback(""), 2000);
+
+        setReplyText("");
+        setReplyImages([]);
+        setIsReplying(null);
+        setShowKaomojiPopup(null);
+
+        const res = await axios.get(
+          `http://localhost:5000/profile/thoughts-history/${userId}`
+        );
+        setPosts(res.data);
+      }
+    } catch (error) {
+      setReplyFeedback("Something went wrong ＞︿＜");
+      setTimeout(() => setReplyFeedback(""), 2000);
+    }
   };
+
 
   return (
     <div className="thoughts-history-container">
@@ -129,180 +148,238 @@ function ThoughtsHistory() {
       </button>
 
       <div className="thoughts-history-list">
-        {posts.map((post) => (
-          <div key={post.id}>
-            <div className="thought-history-card">
-              <p className="thought-history-date">{post.date}</p>
-              <p className="thought-history-content">{post.content}</p>
-
-              <div className="thought-history-actions">
-                <button
-                  className="icon-btn"
-                  onClick={() => {
-                    setOpenReactionsPostId(
-                      openReactionsPostId === post.id ? null : post.id
-                    );
-                    setOpenCommentsPostId(null);
-                  }}
-                >
-                  •ᴗ•
-                </button>
-
-                <button
-                  className="icon-btn"
-                  onClick={() => {
-                    setOpenCommentsPostId(
-                      openCommentsPostId === post.id ? null : post.id
-                    );
-                    setOpenReactionsPostId(null);
-                  }}
-                >
-                  ☰
-                </button>
-              </div>
-            </div>
-
-            {openReactionsPostId === post.id && (
-              <div className="reaction-list">
-                {post.reactions.map((reaction, index) => (
-                  <div key={index} className="reaction-item">
-                    <span>{reaction.user}</span>
-                    <span>{reaction.emoji}</span>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {openCommentsPostId === post.id && (
-              <div className="comments-section">
-                {post.comments.map((comment) => (
-                  <div key={comment.id} className="comment-item">
-                    <p className="comment-text">{comment.text}</p>
-
-                    {comment.replies.map((reply, i) => (
-                      <p key={i} className="comment-text">
-                        ↳ {reply}
-                      </p>
+        {posts.length === 0 ? (
+          <p className="empty-text">No thoughts yet ＞︿＜</p>
+        ) : (
+          posts.map((post) => (
+            <div key={post.post_id}>
+              <div className="thought-history-card">
+                <p className="thought-history-date">
+                  {post.creation_date
+                    ? new Date(post.creation_date).toLocaleDateString()
+                    : ""}
+                </p>
+                <p className="thought-history-content">{post.content}</p>
+                {post.images && post.images.length > 0 && (
+                  <div className="post-images">
+                    {post.images.map((img, index) => (
+                      <img
+                        key={index}
+                        src={`http://localhost:5000/uploads/${img}`}
+                        alt="post"
+                        className="post-image"
+                      />
                     ))}
+                  </div>
+                )}
 
-                    <div className="comment-actions">
-                      <button
-                        className="comment-btn"
-                        onClick={() =>
-                          setIsReplying(
-                            isReplying === comment.id ? null : comment.id
-                          )
-                        }
-                      >
-                        Reply
-                      </button>
+                <div className="thought-history-actions">
+                  <button
+                    className="icon-btn"
+                    onClick={() => {
+                      setOpenReactionsPostId(
+                        openReactionsPostId === post.post_id
+                          ? null
+                          : post.post_id
+                      );
+                      setOpenCommentsPostId(null);
+                    }}
+                  >
+                    •ᴗ•
+                  </button>
+
+                  <button
+                    className="icon-btn"
+                    onClick={() => {
+                      setOpenCommentsPostId(
+                        openCommentsPostId === post.post_id ? null : post.post_id
+                      );
+                      setOpenReactionsPostId(null);
+                    }}
+                  >
+                    ☰
+                  </button>
+                </div>
+              </div>
+
+              {openReactionsPostId === post.post_id && (
+                <div className="reaction-list">
+                  {post.reactions.map((reaction, index) => (
+                    <div key={index} className="reaction-item">
+                      <span>{reaction.reaction_type}</span>
+                      <span>{reaction.count}</span>
                     </div>
+                  ))}
+                </div>
+              )}
 
-                    {isReplying === comment.id && (
-                      <div className="reply-box">
-                        <textarea
-                          value={replyText}
-                          onChange={(e) => setReplyText(e.target.value)}
-                          placeholder="Write a reply..."
-                        />
+              {openCommentsPostId === post.post_id && (
+                <div className="comments-section">
+                  <div className="comment-box">
+                    <textarea
+                      placeholder="Write a comment..."
+                      value={replyText}
+                      onChange={(e) => setReplyText(e.target.value)}
+                    />
+                    <button
+                      onClick={async () => {
+                        const userId = localStorage.getItem("user_id");
 
-                        <div className="reply-actions">
-                          <button
-                            onClick={() =>
-                              setShowKaomojiPopup(
-                                showKaomojiPopup === comment.id
-                                  ? null
-                                  : comment.id
-                              )
+                        try {
+                          const res = await axios.post(
+                            "http://localhost:5000/comments/add",
+                            {
+                              user_id: userId,
+                              post_id: post.post_id,
+                              content: replyText
                             }
-                          >
-                            (≧▽≦)
-                          </button>
+                          );
 
-                          <button onClick={() => fileInputRef.current.click()}>
-                            ⬒
-                          </button>
+                          if (res.data.success) {
+                            setReplyText("");
 
-                          <input
-                            type="file"
-                            accept="image/*"
-                            multiple
-                            ref={fileInputRef}
-                            style={{ display: "none" }}
-                            onChange={handleImageAdd}
+                            const updated = await axios.get(
+                              `http://localhost:5000/profile/thoughts-history/${userId}`
+                            );
+                            setPosts(updated.data);
+                          }
+                        } catch { }
+                      }}
+                    >
+                      Comment
+                    </button>
+                  </div>
+                  {post.comments.map((comment) => (
+                    <div key={comment.comment_id} className="comment-item">
+                      <p className="comment-text">{comment.content}</p>
+
+                      {comment.replies.map((reply, i) => (
+                        <p key={i} className="comment-text">
+                          ↳ {reply.content}
+                        </p>
+                      ))}
+
+                      <div className="comment-actions">
+                        <button
+                          className="comment-btn"
+                          onClick={() =>
+                            setIsReplying(
+                              isReplying === comment.comment_id
+                                ? null
+                                : comment.comment_id
+                            )
+                          }
+                        >
+                          Reply
+                        </button>
+                      </div>
+
+                      {isReplying === comment.comment_id && (
+                        <div className="reply-box">
+                          <textarea
+                            value={replyText}
+                            onChange={(e) => setReplyText(e.target.value)}
+                            placeholder="Write a reply..."
                           />
 
-                          <button onClick={() => submitReply(comment)}>
-                            Submit
-                          </button>
-                        </div>
+                          <div className="reply-actions">
+                            <button
+                              onClick={() =>
+                                setShowKaomojiPopup(
+                                  showKaomojiPopup === comment.comment_id
+                                    ? null
+                                    : comment.comment_id
+                                )
+                              }
+                            >
+                              (≧▽≦)
+                            </button>
 
-                        {replyImages.length > 0 && (
-                          <div className="comment-preview-row">
-                            {replyImages.map((img, index) => (
-                              <img
-                                key={index}
-                                src={img.preview}
-                                className="comment-preview-img"
-                                alt="preview"
-                              />
-                            ))}
+                            <button onClick={() => fileInputRef.current.click()}>
+                              ⬒
+                            </button>
+
+                            <input
+                              type="file"
+                              accept="image/*"
+                              multiple
+                              ref={fileInputRef}
+                              style={{ display: "none" }}
+                              onChange={handleImageAdd}
+                            />
+
+                            <button onClick={() => submitReply(comment, post.post_id)}>
+                              Submit
+                            </button>
                           </div>
-                        )}
 
-                        {replyFeedback && (
-                          <div className="reply-feedback">
-                            {replyFeedback}
-                          </div>
-                        )}
-
-                        {showKaomojiPopup === comment.id && (
-                          <div className="kaomoji-popup" ref={kaomojiRef}>
-                            <div className="kaomoji-tabs">
-                              {kaomojiTabs.map((tab) => (
-                                <button
-                                  key={tab.key}
-                                  className={
-                                    activeKaomojiCategory === tab.key
-                                      ? "kaomoji-tab active"
-                                      : "kaomoji-tab"
-                                  }
-                                  onClick={() =>
-                                    setActiveKaomojiCategory(tab.key)
-                                  }
-                                >
-                                  {tab.label}
-                                </button>
-                              ))}
-                            </div>
-
-                            <div className="kaomoji-list">
-                              {kaomojiCategories[
-                                activeKaomojiCategory
-                              ].map((icon, index) => (
-                                <button
+                          {replyImages.length > 0 && (
+                            <div className="comment-preview-row">
+                              {replyImages.map((img, index) => (
+                                <img
                                   key={index}
-                                  className="kaomoji-item"
-                                  onClick={() =>
-                                    setReplyText((prev) =>
-                                      prev ? prev + " " + icon : icon
-                                    )
-                                  }
-                                >
-                                  {icon}
-                                </button>
+                                  src={img.preview}
+                                  className="comment-preview-img"
+                                  alt="preview"
+                                />
                               ))}
                             </div>
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        ))}
+                          )}
+
+                          {replyFeedback && (
+                            <div className="reply-feedback">
+                              {replyFeedback}
+                            </div>
+                          )}
+
+                          {showKaomojiPopup === comment.comment_id && (
+                            <div className="kaomoji-popup" ref={kaomojiRef}>
+                              <div className="kaomoji-tabs">
+                                {kaomojiTabs.map((tab) => (
+                                  <button
+                                    key={tab.key}
+                                    className={
+                                      activeKaomojiCategory === tab.key
+                                        ? "kaomoji-tab active"
+                                        : "kaomoji-tab"
+                                    }
+                                    onClick={() =>
+                                      setActiveKaomojiCategory(tab.key)
+                                    }
+                                  >
+                                    {tab.label}
+                                  </button>
+                                ))}
+                              </div>
+
+                              <div className="kaomoji-list">
+                                {kaomojiCategories[activeKaomojiCategory].map(
+                                  (icon, index) => (
+                                    <button
+                                      key={index}
+                                      className="kaomoji-item"
+                                      onClick={() =>
+                                        setReplyText((prev) =>
+                                          prev ? prev + " " + icon : icon
+                                        )
+                                      }
+                                    >
+                                      {icon}
+                                    </button>
+                                  )
+                                )}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          ))
+        )}
       </div>
     </div>
   );
