@@ -30,22 +30,22 @@ function Feed() {
   const menuReference = useRef(null);
   const commentBoxReference = useRef(null);
 
- const fetchFeed = async () => {
-  const userId = localStorage.getItem("user_id");
+  const fetchFeed = async () => {
+    const userId = localStorage.getItem("user_id");
 
-  try {
-    const res = await axios.get("http://localhost:5000/feed", {
-      params: {
-        user_id: userId,
-        tab: activeTab
-      }
-    });
+    try {
+      const res = await axios.get("http://localhost:5000/feed", {
+        params: {
+          user_id: userId,
+          tab: activeTab
+        }
+      });
 
-    setPosts(Array.isArray(res.data) ? res.data : []);
-  } catch {
-    setPosts([]);
-  }
-};
+      setPosts(Array.isArray(res.data) ? res.data : []);
+    } catch {
+      setPosts([]);
+    }
+  };
 
   useEffect(() => {
     fetchFeed();
@@ -217,8 +217,33 @@ function Feed() {
 
                 {openMenuForPost === post.post_id && (
                   <div className="menu-popup" ref={menuReference}>
-                    <button>Don’t show this post</button>
-                    <button>Report post</button>
+                    <button
+                      onClick={async () => {
+                        const userId = localStorage.getItem("user_id");
+                        await axios.post("http://localhost:5000/posts/hide", {
+                          user_id: userId,
+                          post_id: post.post_id
+                        });
+                        setOpenMenuForPost(null);
+                        fetchFeed();
+                      }}
+                    >
+                      Don’t show this post
+                    </button>
+
+                    <button
+                      onClick={async () => {
+                        const userId = localStorage.getItem("user_id");
+                        await axios.post("http://localhost:5000/posts/report", {
+                          user_id: userId,
+                          post_id: post.post_id
+                        });
+                        setOpenMenuForPost(null);
+                      }}
+                    >
+                      Report post
+                    </button>
+
                     <button
                       className="cancel-menu"
                       onClick={() => setOpenMenuForPost(null)}
@@ -249,7 +274,9 @@ function Feed() {
                   className="react-btn"
                   onClick={() => handleReactionClick(post.post_id)}
                 >
-                  •ᴗ•
+                  •ᴗ• {post.reaction_count > 0 && (
+                    <span className="reaction-count">{post.reaction_count}</span>
+                  )}
                 </span>
 
                 {openReactionForPost === post.post_id && (
@@ -261,11 +288,24 @@ function Feed() {
                       ×
                     </div>
                     <EmojiPicker
-                      theme="dark"
-                      skinTonesDisabled={true}
-                      searchDisabled={true}
-                      previewConfig={{ showPreview: false }}
-                    />
+  theme="dark"
+  skinTonesDisabled={true}
+  searchDisabled={true}
+  previewConfig={{ showPreview: false }}
+  onEmojiClick={async (emojiData) => {
+    const userId = localStorage.getItem("user_id");
+
+    await axios.post("http://localhost:5000/reactions/add", {
+      user_id: userId,
+      post_id: post.post_id,
+      reaction_type: emojiData.emoji
+    });
+
+    setOpenReactionForPost(null);
+    fetchFeed();
+  }}
+/>
+
                   </div>
                 )}
 
@@ -289,7 +329,10 @@ function Feed() {
 
                   {visibleComments.map((comment) => (
                     <div key={comment.comment_id} className="comment-item">
-                      <p className="comment-text">{comment.content}</p>
+                     <p className="comment-text">
+  <strong>{comment.username}</strong>: {comment.content}
+</p>
+
 
                       {comment.images && comment.images.length > 0 && (
                         <div className="comment-preview-row">
