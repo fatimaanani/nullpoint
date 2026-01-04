@@ -179,7 +179,7 @@ app.get("/journal/log/:user_id", async (req, res) => {
     res.json({ success: false });
   }
 });
-
+//quotes 
 app.get("/journal/quote", async (req, res) => {
   try {
     const [rows] = await pool.query(
@@ -362,28 +362,48 @@ app.post("/comments/reply", async (req, res) => {
 });
 
 //tryoiut
-app.post("/comments/add", async (req, res) => {
-  const { user_id, post_id, content } = req.body;
+app.post(
+  "/comments/add",
+  upload.array("images", 3),
+  async (req, res) => {
+    const { user_id, post_id, parent_comment_id, content } = req.body;
 
-  if (!user_id || !post_id || !content) {
-    return res.json({ success: false, message: "missing_data" });
+    if (!user_id || !post_id || !content) {
+      return res.json({ success: false });
+    }
+
+    try {
+      const [commentResult] = await pool.query(
+        "INSERT INTO post_comments (user_id, post_id, parent_comment_id, content) VALUES (?, ?, ?, ?)",
+        [user_id, post_id, parent_comment_id || null, content]
+      );
+
+      const commentId = commentResult.insertId;
+
+      if (req.files && req.files.length > 0) {
+        const imageValues = req.files.map((file) => [
+          commentId,
+          file.filename
+        ]);
+
+        await pool.query(
+          "INSERT INTO comment_images (comment_id, image_url) VALUES ?",
+          [imageValues]
+        );
+      }
+
+      res.json({ success: true });
+    } catch (error) {
+      console.log("COMMENT ERROR:", error.sqlMessage || error);
+      res.json({ success: false });
+    }
   }
+);
 
-  try {
-    await pool.query(
-      "INSERT INTO post_comments (post_id, user_id, parent_comment_id, content) VALUES (?, ?, NULL, ?)",
-      [post_id, user_id, content]
-    );
-
-    res.json({ success: true });
-  } catch (error) {
-    console.log("ADD COMMENT ERROR:", error.sqlMessage || error);
-    res.json({ success: false, message: "server_error" });
-  }
-});
-
-//feed
+// feed
 app.get("/feed", async (req, res) => {
+  const { user_id } = req.query;
+
   try {
     const [posts] = await pool.query(`
       SELECT 
@@ -424,6 +444,18 @@ app.get("/feed", async (req, res) => {
       [postIds]
     );
 
+    let userReactions = [];
+
+    if (user_id) {
+      const [rows] = await pool.query(
+        `SELECT post_id, reaction_type
+         FROM post_reactions
+         WHERE user_id = ? AND post_id IN (?)`,
+        [user_id, postIds]
+      );
+      userReactions = rows;
+    }
+
     const result = posts.map(post => {
       const postImages = images
         .filter(i => i.post_id === post.post_id)
@@ -448,6 +480,10 @@ app.get("/feed", async (req, res) => {
           }))
       }));
 
+      const userReaction = userReactions.find(
+        r => r.post_id === post.post_id
+      );
+
       return {
         post_id: post.post_id,
         content: post.content,
@@ -455,6 +491,7 @@ app.get("/feed", async (req, res) => {
         username: post.is_anonymous ? "Anonymous User" : post.username,
         images: postImages,
         reactions: postReactions,
+        user_reaction: userReaction ? userReaction.reaction_type : null,
         comments: commentsWithReplies
       };
     });
@@ -463,6 +500,100 @@ app.get("/feed", async (req, res) => {
   } catch (error) {
     console.log("FEED ERROR:", error.sqlMessage || error);
     res.status(500).json({ message: "server_error" });
+  }
+});
+
+
+//reactions
+app.post("/reactions/add", async (req, res) => {
+  const { user_id, post_id, reaction_type } = req.body;
+
+  if (!user_id || !post_id || !reaction_type) {
+    return res.json({ success: false });
+  }
+
+  try {
+    const [existing] = await pool.query(
+      "SELECT reaction_id FROM post_reactions WHERE user_id = ? AND post_id = ? AND reaction_type = ?",
+      [user_id, post_id, reaction_type]
+    );
+
+    if (existing.length > 0) {
+      await pool.query(
+        "DELETE FROM post_reactions WHERE reaction_id = ?",
+        [existing[0].reaction_id]
+      );
+    } else {
+      await pool.query(
+        "INSERT INTO post_reactions (user_id, post_id, reaction_type) VALUES (?, ?, ?)",
+        [user_id, post_id, reaction_type]
+      );
+    }
+
+    res.json({ success: true });
+  } catch (error) {
+    console.log("REACTION ERROR:", error.sqlMessage || error);
+    res.json({ success: false });
+  }
+});
+
+//comments
+app.post(
+  "/comments/add",
+  upload.array("images", 3),
+  async (req, res) => {
+    const { user_id, post_id, content, parent_comment_id } = req.body;
+
+    if (!user_id || !post_id || !content) {
+      return res.json({ success: false });
+    }
+
+    try {
+      const [result] = await pool.query(
+        "INSERT INTO post_comments (user_id, post_id, parent_comment_id, content) VALUES (?, ?, ?, ?)",
+        [user_id, post_id, parent_comment_id || null, content]
+      );
+
+      const commentId = result.insertId;
+
+      if (req.files && req.files.length > 0) {
+        const values = req.files.map((file) => [
+          commentId,
+          file.filename
+        ]);
+
+        await pool.query(
+          "INSERT INTO comment_images (comment_id, image_url) VALUES ?",
+          [values]
+        );
+      }
+
+      res.json({ success: true });
+    } catch (error) {
+      console.log("COMMENT ERROR:", error.sqlMessage || error);
+      res.json({ success: false });
+    }
+  }
+);
+
+// update about (profile)
+app.post("/profile/update-about", async (req, res) => {
+  const { user_id, about } = req.body;
+
+  if (!user_id) {
+    return res.json({ success: false, message: "missing_user" });
+  }
+
+  try {
+    await pool.query(
+      "UPDATE users SET about = ? WHERE user_id = ?",
+      [about, user_id]
+    );
+
+    res.json({ success: true });
+  } catch (error) {
+    console.log("ABOUT UPDATE ERROR:", error.sqlMessage || error);
+    res.json({ success: false, message: "server_error" });
   }
 });
 
