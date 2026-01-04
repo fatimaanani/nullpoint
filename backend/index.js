@@ -220,7 +220,7 @@ app.get("/profile/:user_id/moods", async (req, res) => {
   }
 });
 
-//thoughts history
+// thoughts history (profile)
 app.get("/profile/thoughts-history/:userId", async (req, res) => {
   const { userId } = req.params;
 
@@ -237,61 +237,66 @@ app.get("/profile/thoughts-history/:userId", async (req, res) => {
     const postIds = posts.map((p) => p.post_id);
 
     const [reactions] = await pool.query(
-      `SELECT post_id, reaction_type, COUNT(*) AS count
-       FROM post_reactions
-       WHERE post_id IN (?)
-       GROUP BY post_id, reaction_type`,
+      `SELECT pr.post_id, pr.reaction_type, u.username
+       FROM post_reactions pr
+       JOIN users u ON pr.user_id = u.user_id
+       WHERE pr.post_id IN (?)`,
       [postIds]
     );
 
     const [comments] = await pool.query(
-      `SELECT comment_id, post_id, parent_comment_id, content
-       FROM post_comments
-       WHERE post_id IN (?)
-       ORDER BY creation_date ASC`,
+      `SELECT pc.comment_id, pc.post_id, pc.parent_comment_id, pc.content, u.username
+       FROM post_comments pc
+       JOIN users u ON pc.user_id = u.user_id
+       WHERE pc.post_id IN (?)
+       ORDER BY pc.creation_date ASC`,
       [postIds]
     );
-const [images] = await pool.query(
-  `SELECT post_id, image_url
-   FROM post_images
-   WHERE post_id IN (?)`,
-  [postIds]
-);
 
-const result = posts.map((post) => {
-  const postReactions = reactions.filter(
-    (r) => r.post_id === post.post_id
-  );
+    const [images] = await pool.query(
+      `SELECT post_id, image_url
+       FROM post_images
+       WHERE post_id IN (?)`,
+      [postIds]
+    );
 
-  const postComments = comments.filter(
-    (c) => c.post_id === post.post_id && c.parent_comment_id === null
-  );
+    const result = posts.map((post) => {
+      const postReactions = reactions.filter(
+        (r) => r.post_id === post.post_id
+      );
 
-  const commentsWithReplies = postComments.map((comment) => ({
-    comment_id: comment.comment_id,
-    content: comment.content,
-    replies: comments
-      .filter((r) => r.parent_comment_id === comment.comment_id)
-      .map((r) => ({
-        reply_id: r.comment_id,
-        content: r.content
-      }))
-  }));
+      const postComments = comments.filter(
+        (c) =>
+          c.post_id === post.post_id &&
+          c.parent_comment_id === null
+      );
 
-  const postImages = images
-    .filter((img) => img.post_id === post.post_id)
-    .map((img) => img.image_url);
+      const commentsWithReplies = postComments.map((comment) => ({
+        comment_id: comment.comment_id,
+        content: comment.content,
+        username: comment.username,
+        replies: comments
+          .filter((r) => r.parent_comment_id === comment.comment_id)
+          .map((r) => ({
+            reply_id: r.comment_id,
+            content: r.content,
+            username: r.username
+          }))
+      }));
 
-  return {
-    post_id: post.post_id,
-    content: post.content,
-    creation_date: post.creation_date,
-    reactions: postReactions,
-    comments: commentsWithReplies,
-    images: postImages
-  };
-});
+      const postImages = images
+        .filter((img) => img.post_id === post.post_id)
+        .map((img) => img.image_url);
 
+      return {
+        post_id: post.post_id,
+        content: post.content,
+        creation_date: post.creation_date,
+        reactions: postReactions,
+        comments: commentsWithReplies,
+        images: postImages
+      };
+    });
 
     res.json(result);
   } catch (error) {
@@ -299,6 +304,7 @@ const result = posts.map((post) => {
     res.status(500).json({ message: "server_error" });
   }
 });
+
 
 //cast
 app.post(
@@ -399,10 +405,9 @@ app.post(
     }
   }
 );
-
 // feed
 app.get("/feed", async (req, res) => {
-  const { user_id } = req.query;
+  const { user_id, tab } = req.query;
 
   try {
     const [posts] = await pool.query(`
@@ -422,6 +427,15 @@ app.get("/feed", async (req, res) => {
     }
 
     const postIds = posts.map(p => p.post_id);
+let hiddenPostIds = [];
+
+if (user_id) {
+  const [hidden] = await pool.query(
+    "SELECT post_id FROM hidden_posts WHERE user_id = ?",
+    [user_id]
+  );
+  hiddenPostIds = hidden.map(h => h.post_id);
+}
 
     const [images] = await pool.query(
       "SELECT post_id, image_url FROM post_images WHERE post_id IN (?)",
@@ -429,18 +443,33 @@ app.get("/feed", async (req, res) => {
     );
 
     const [reactions] = await pool.query(
-      `SELECT post_id, reaction_type, COUNT(*) AS count
+      `SELECT post_id, COUNT(*) AS count
        FROM post_reactions
        WHERE post_id IN (?)
-       GROUP BY post_id, reaction_type`,
+       GROUP BY post_id`,
       [postIds]
     );
 
     const [comments] = await pool.query(
-      `SELECT comment_id, post_id, parent_comment_id, content
-       FROM post_comments
-       WHERE post_id IN (?)
-       ORDER BY creation_date ASC`,
+  `SELECT 
+     pc.comment_id,
+     pc.post_id,
+     pc.parent_comment_id,
+     pc.content,
+     u.username
+   FROM post_comments pc
+   JOIN users u ON pc.user_id = u.user_id
+   WHERE pc.post_id IN (?)
+   ORDER BY pc.creation_date ASC`,
+  [postIds]
+);
+
+    const [commentImages] = await pool.query(
+      `SELECT comment_id, image_url
+       FROM comment_images
+       WHERE comment_id IN (
+         SELECT comment_id FROM post_comments WHERE post_id IN (?)
+       )`,
       [postIds]
     );
 
@@ -448,7 +477,7 @@ app.get("/feed", async (req, res) => {
 
     if (user_id) {
       const [rows] = await pool.query(
-        `SELECT post_id, reaction_type
+        `SELECT post_id
          FROM post_reactions
          WHERE user_id = ? AND post_id IN (?)`,
         [user_id, postIds]
@@ -456,46 +485,62 @@ app.get("/feed", async (req, res) => {
       userReactions = rows;
     }
 
-    const result = posts.map(post => {
-      const postImages = images
-        .filter(i => i.post_id === post.post_id)
-        .map(i => i.image_url);
+    const result = posts
+  .filter(post => !hiddenPostIds.includes(post.post_id))
+  .map(post => {
+    const postImages = images
+      .filter(i => i.post_id === post.post_id)
+      .map(i => i.image_url);
 
-      const postReactions = reactions.filter(
-        r => r.post_id === post.post_id
+    const postReaction = reactions.find(
+      r => r.post_id === post.post_id
+    );
+
+    const postComments = comments.filter(
+      c => c.post_id === post.post_id && c.parent_comment_id === null
+    );
+
+    const commentsWithReplies = postComments.map(comment => ({
+      comment_id: comment.comment_id,
+      content: comment.content,
+        username: comment.username,
+      images: commentImages
+        .filter(img => img.comment_id === comment.comment_id)
+        .map(img => img.image_url),
+      replies: comments
+        .filter(r => r.parent_comment_id === comment.comment_id)
+        .map(r => ({
+          reply_id: r.comment_id,
+          content: r.content,
+          username: r.username,
+          images: commentImages
+            .filter(img => img.comment_id === r.comment_id)
+            .map(img => img.image_url)
+        }))
+    }));
+
+    return {
+      post_id: post.post_id,
+      content: post.content,
+      creation_date: post.creation_date,
+      username: post.is_anonymous ? "Anonymous User" : post.username,
+      images: postImages,
+      reaction_count: postReaction ? postReaction.count : 0,
+      comments: commentsWithReplies
+    };
+  });
+
+    // trending tab
+    if (tab === "trending") {
+      const trending = result.filter(
+        post =>
+          post.reaction_count + post.comments.length >= 4
       );
 
-      const postComments = comments.filter(
-        c => c.post_id === post.post_id && c.parent_comment_id === null
-      );
+      return res.json(trending);
+    }
 
-      const commentsWithReplies = postComments.map(comment => ({
-        comment_id: comment.comment_id,
-        content: comment.content,
-        replies: comments
-          .filter(r => r.parent_comment_id === comment.comment_id)
-          .map(r => ({
-            reply_id: r.comment_id,
-            content: r.content
-          }))
-      }));
-
-      const userReaction = userReactions.find(
-        r => r.post_id === post.post_id
-      );
-
-      return {
-        post_id: post.post_id,
-        content: post.content,
-        creation_date: post.creation_date,
-        username: post.is_anonymous ? "Anonymous User" : post.username,
-        images: postImages,
-        reactions: postReactions,
-        user_reaction: userReaction ? userReaction.reaction_type : null,
-        comments: commentsWithReplies
-      };
-    });
-
+    // default = recent
     res.json(result);
   } catch (error) {
     console.log("FEED ERROR:", error.sqlMessage || error);
@@ -596,6 +641,54 @@ app.post("/profile/update-about", async (req, res) => {
     res.json({ success: false, message: "server_error" });
   }
 });
+// hide post
+app.post("/posts/hide", async (req, res) => {
+  const { user_id, post_id } = req.body;
+
+  if (!user_id || !post_id) {
+    return res.json({ success: false });
+  }
+
+  try {
+    const [existing] = await pool.query(
+      "SELECT hidden_id FROM hidden_posts WHERE user_id = ? AND post_id = ?",
+      [user_id, post_id]
+    );
+
+    if (existing.length === 0) {
+      await pool.query(
+        "INSERT INTO hidden_posts (user_id, post_id) VALUES (?, ?)",
+        [user_id, post_id]
+      );
+    }
+
+    res.json({ success: true });
+  } catch (error) {
+    console.log("HIDE POST ERROR:", error.sqlMessage || error);
+    res.json({ success: false });
+  }
+});
+// report post
+app.post("/posts/report", async (req, res) => {
+  const { user_id, post_id } = req.body;
+
+  if (!user_id || !post_id) {
+    return res.json({ success: false });
+  }
+
+  try {
+    await pool.query(
+      "INSERT INTO reports (user_id, post_id) VALUES (?, ?)",
+      [user_id, post_id]
+    );
+
+    res.json({ success: true });
+  } catch (error) {
+    console.log("REPORT POST ERROR:", error.sqlMessage || error);
+    res.json({ success: false });
+  }
+});
+
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
