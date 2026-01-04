@@ -29,7 +29,7 @@ function Profile() {
         setGender(res.data.gender);
         setAbout(res.data.about || "");
       })
-      .catch(() => {});
+      .catch(() => { });
   }, [userId]);
 
   useEffect(() => {
@@ -59,7 +59,7 @@ function Profile() {
         setGender(value);
         setIsOpen(false);
       }
-    } catch (error) {}
+    } catch (error) { }
   };
 
   const getIcon = () => {
@@ -75,6 +75,16 @@ function Profile() {
     if (gender === "female") return "Female";
     if (gender === "prefer_not_say") return "Anonymous";
     return "Select Gender";
+  };
+  const handleAboutSave = async () => {
+    try {
+      await axios.post("http://localhost:5000/profile/update-about", {
+        user_id: userId,
+        about: about
+      });
+
+      setIsEditing(false);
+    } catch (error) { }
   };
 
   return (
@@ -140,10 +150,17 @@ function Profile() {
               <p className="label">About</p>
               <button
                 className="edit-btn"
-                onClick={() => setIsEditing(!isEditing)}
+                onClick={() => {
+                  if (isEditing) {
+                    handleAboutSave();
+                  } else {
+                    setIsEditing(true);
+                  }
+                }}
               >
                 {isEditing ? "Save" : "Edit"}
               </button>
+
             </div>
 
             <div className="about-content-wrapper">
