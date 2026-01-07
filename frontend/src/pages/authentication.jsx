@@ -23,12 +23,13 @@ function Authentication() {
     }
 
     try {
-      const response = await api.post("/register", {
-        fullName,
-        username,
-        email,
-        password
-      });
+      await api.post("/authentication/register", {
+  fullName,
+  username,
+  email,
+  password
+});
+
 
       if (response.data.success) {
         localStorage.setItem("user_id", response.data.user_id);
