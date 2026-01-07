@@ -3,6 +3,7 @@ const cors = require("cors");
 const dotenv = require("dotenv");
 const path = require("path");
 const multer = require("multer");
+const bcrypt = require("bcrypt");
 
 const pool = require("./db");
 
@@ -54,11 +55,13 @@ app.post("/authentication/register", async (req, res) => {
       return res.json({ success: false, message: "user_exists" });
     }
 
+    const hashedPassword = await bcrypt.hash(password, 10);
+
     const [result] = await pool.query(
       `INSERT INTO users 
-        (full_name, username, email, password_hash, gender, about) 
+       (full_name, username, email, password_hash, gender, about) 
        VALUES (?, ?, ?, ?, NULL, NULL)`,
-      [fullName, username, email, password]
+      [fullName, username, email, hashedPassword]
     );
 
     res.json({
@@ -66,12 +69,43 @@ app.post("/authentication/register", async (req, res) => {
       user_id: result.insertId
     });
   } catch (error) {
-    console.log("AUTH SQL ERROR:");
-    console.log(error.sqlMessage || error);
+    console.log("AUTH SQL ERROR:", error.sqlMessage || error);
     res.json({ success: false, message: "server_error" });
   }
 });
 
+app.post("/authentication/login", async (req, res) => {
+  const { username, password } = req.body;
+
+  if (!username || !password) {
+    return res.json({ success: false });
+  }
+
+  try {
+    const [users] = await pool.query(
+      "SELECT user_id, password_hash FROM users WHERE username = ?",
+      [username]
+    );
+
+    if (users.length === 0) {
+      return res.json({ success: false });
+    }
+
+    const bcrypt = require("bcrypt");
+    const isMatch = await bcrypt.compare(password, users[0].password_hash);
+
+    if (!isMatch) {
+      return res.json({ success: false });
+    }
+
+    res.json({
+      success: true,
+      user_id: users[0].user_id
+    });
+  } catch {
+    res.json({ success: false });
+  }
+});
 
 //profile
 app.get("/profile/:user_id", async (req, res) => {
