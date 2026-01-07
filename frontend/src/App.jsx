@@ -4,7 +4,7 @@ import { BrowserRouter as Router, Routes, Route, useLocation, Navigate } from "r
 import RequireAuth from "./guards/requireAuth";
 import RedirectIfAuth from "./guards/redirectIfAuth";
 
-import BottomNav from "./components/BottomNav";
+import BottomNav from "./components/bottomNav";
 
 import Feed from "./pages/feed";
 import CreatePost from "./pages/createPost";
