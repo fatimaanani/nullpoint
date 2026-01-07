@@ -2,7 +2,7 @@ import React, { useState, useMemo, useEffect } from "react";
 import "../styles/journalLog.css";
 import TopBar from "../components/topBar";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import api from "../api";
 
 const entryColors = ["#b8c9ff", "#f3b8d9", "#d9b8e6", "#6bb397", "#c5e6d3"];
 
@@ -28,17 +28,18 @@ function JournalLog() {
   const [currentMonth, setCurrentMonth] = useState(today.getMonth());
   const [currentYear, setCurrentYear] = useState(today.getFullYear());
 
-  useEffect(() => {
-    const userId = localStorage.getItem("user_id");
-    axios
-      .get(`http://localhost:5000/journal/log/${userId}`)
-      .then((res) => {
-        setEntries(res.data);
-      })
-      .catch(() => {
-        setEntries([]);
-      });
-  }, []);
+ useEffect(() => {
+  const userId = localStorage.getItem("user_id");
+  api
+    .get(`/journal/log/${userId}`)
+    .then((res) => {
+      setEntries(res.data);
+    })
+    .catch(() => {
+      setEntries([]);
+    });
+}, []);
+
 
   const daysInMonth = useMemo(() => {
     return new Date(currentYear, currentMonth + 1, 0).getDate();

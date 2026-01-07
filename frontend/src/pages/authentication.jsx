@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import api from "../api";
 import logo from "../assets/nullpointlogo.png";
 import "../styles/authentication.css";
 
@@ -23,7 +23,7 @@ function Authentication() {
     }
 
     try {
-      const response = await axios.post("http://localhost:5000/authentication/register", {
+      const response = await api.post("/register", {
         fullName,
         username,
         email,

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Venus, Mars, Circle, ChevronDown, ChevronUp } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import api from "../api";
 import "../styles/profile.css";
 
 function Profile() {
@@ -20,8 +20,8 @@ function Profile() {
   const userId = localStorage.getItem("user_id");
 
   useEffect(() => {
-    axios
-      .get(`http://localhost:5000/profile/${userId}`)
+    api
+      .get(`/profile/${userId}`)
       .then((res) => {
         setFullName(res.data.full_name);
         setUsername(res.data.username);
@@ -33,8 +33,8 @@ function Profile() {
   }, [userId]);
 
   useEffect(() => {
-    axios
-      .get(`http://localhost:5000/profile/${userId}/moods`)
+    api
+      .get(`/profile/${userId}/moods`)
       .then((res) => {
         setMostUsedMoods(res.data);
       })
@@ -47,8 +47,8 @@ function Profile() {
     if (gender) return;
 
     try {
-      const response = await axios.post(
-        "http://localhost:5000/profile/set-gender",
+      const response = await api.post(
+        "/profile/set-gender",
         {
           user_id: userId,
           gender: value
@@ -61,6 +61,7 @@ function Profile() {
       }
     } catch (error) { }
   };
+
 
   const getIcon = () => {
     if (gender === "female") return <Venus className="gender-symbol female" />;
@@ -77,12 +78,14 @@ function Profile() {
     return "Select Gender";
   };
   const handleAboutSave = async () => {
-    try {
-      await axios.post("http://localhost:5000/profile/update-about", {
+     try {
+    await api.post(
+      "/profile/update-about",
+      {
         user_id: userId,
         about: about
-      });
-
+      }
+    );
       setIsEditing(false);
     } catch (error) { }
   };

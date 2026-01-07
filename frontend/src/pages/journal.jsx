@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import "../styles/journal.css";
 import TopBar from "../components/topBar";
-import axios from "axios";
+import api from "../api";
 
 function Journal() {
   const [entry, setEntry] = useState("");
@@ -22,18 +22,19 @@ function Journal() {
 
   const moods = ["calm", "tired", "grateful", "overwhelmed", "peaceful", "anxious"];
 
-  useEffect(() => {
-    axios
-      .get("http://localhost:5000/journal/quote")
-      .then((res) => {
-        if (res.data && res.data.quote_text) {
-          setQuote(res.data.quote_text);
-        }
-      })
-      .catch(() => {
-        setQuote("");
-      });
-  }, []);
+ useEffect(() => {
+  api
+    .get("/journal/quote")
+    .then((res) => {
+      if (res.data && res.data.quote_text) {
+        setQuote(res.data.quote_text);
+      }
+    })
+    .catch(() => {
+      setQuote("");
+    });
+}, []);
+
 
   const toggleMood = (tag) => {
     if (selectedMoods.includes(tag)) {
@@ -63,12 +64,15 @@ function Journal() {
     }
 
     try {
-      const response = await axios.post("http://localhost:5000/journal/add", {
-        user_id: localStorage.getItem("user_id"),
-        title: entryTitle,
-        entry: entry,
-        tags: selectedMoods
-      });
+      const response = await api.post(
+  "/journal/add",
+  {
+    user_id: localStorage.getItem("user_id"),
+    title: entryTitle,
+    entry: entry,
+    tags: selectedMoods
+  }
+);
 
       if (response.data && response.data.success) {
         setTitleFeedback("Title entered successfully (๑˃̵ᴗ˂̵)و");

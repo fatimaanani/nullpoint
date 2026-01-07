@@ -4,7 +4,7 @@ import TopBar from "../components/topBar";
 import EmojiPicker from "emoji-picker-react";
 import { useDropzone } from "react-dropzone";
 import kaomojilib from "kaomojilib";
-import axios from "axios";
+import api from "../api";
 
 const kaomojiList = Object.values(kaomojilib?.library || {}).map(
   (item) => item.icon
@@ -32,14 +32,14 @@ function Feed() {
 
   const fetchFeed = async () => {
     const userId = localStorage.getItem("user_id");
-
     try {
-      const res = await axios.get("http://localhost:5000/feed", {
+      const res = await api.get("/feed", {
         params: {
           user_id: userId,
           tab: activeTab
         }
       });
+
 
       setPosts(Array.isArray(res.data) ? res.data : []);
     } catch {
@@ -144,7 +144,7 @@ function Feed() {
         formData.append("images", img);
       });
 
-      const res = await axios.post("http://localhost:5000/comments/add", formData, {
+      const res = await api.post("/comments/add", formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
 
@@ -220,7 +220,7 @@ function Feed() {
                     <button
                       onClick={async () => {
                         const userId = localStorage.getItem("user_id");
-                        await axios.post("http://localhost:5000/posts/hide", {
+                        await api.post("/posts/hide", {
                           user_id: userId,
                           post_id: post.post_id
                         });
@@ -234,7 +234,7 @@ function Feed() {
                     <button
                       onClick={async () => {
                         const userId = localStorage.getItem("user_id");
-                        await axios.post("http://localhost:5000/posts/report", {
+                        await api.post("/posts/report", {
                           user_id: userId,
                           post_id: post.post_id
                         });
@@ -261,11 +261,12 @@ function Feed() {
                   {post.images.map((img, index) => (
                     <img
                       key={index}
-                      src={`http://localhost:5000/uploads/${img}`}
+                      src={`${api.defaults.baseURL}/uploads/${img}`}
                       alt="post"
                       className="post-image"
                     />
                   ))}
+
                 </div>
               )}
 
@@ -288,23 +289,23 @@ function Feed() {
                       ×
                     </div>
                     <EmojiPicker
-  theme="dark"
-  skinTonesDisabled={true}
-  searchDisabled={true}
-  previewConfig={{ showPreview: false }}
-  onEmojiClick={async (emojiData) => {
-    const userId = localStorage.getItem("user_id");
+                      theme="dark"
+                      skinTonesDisabled={true}
+                      searchDisabled={true}
+                      previewConfig={{ showPreview: false }}
+                      onEmojiClick={async (emojiData) => {
+                        const userId = localStorage.getItem("user_id");
 
-    await axios.post("http://localhost:5000/reactions/add", {
-      user_id: userId,
-      post_id: post.post_id,
-      reaction_type: emojiData.emoji
-    });
+                        await api.post("/reactions/add", {
+                          user_id: userId,
+                          post_id: post.post_id,
+                          reaction_type: emojiData.emoji
+                        });
 
-    setOpenReactionForPost(null);
-    fetchFeed();
-  }}
-/>
+                        setOpenReactionForPost(null);
+                        fetchFeed();
+                      }}
+                    />
 
                   </div>
                 )}
@@ -329,9 +330,9 @@ function Feed() {
 
                   {visibleComments.map((comment) => (
                     <div key={comment.comment_id} className="comment-item">
-                     <p className="comment-text">
-  <strong>{comment.username}</strong>: {comment.content}
-</p>
+                      <p className="comment-text">
+                        <strong>{comment.username}</strong>: {comment.content}
+                      </p>
 
 
                       {comment.images && comment.images.length > 0 && (
@@ -339,7 +340,7 @@ function Feed() {
                           {comment.images.map((img, index) => (
                             <img
                               key={index}
-                              src={`http://localhost:5000/uploads/${img}`}
+                              src={`${api.defaults.baseURL}/uploads/${img}`}
                               alt="comment"
                               className="comment-preview-img"
                             />

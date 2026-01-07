@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import TopBar from "../components/topBar";
 import "../styles/thoughtsHistory.css";
 import kaomojilib from "kaomojilib";
-import axios from "axios";
+import api from "../api";
 
 function buildKaomojiCategories() {
   const kaomojiLibrary = kaomojilib?.library || {};
@@ -61,11 +61,12 @@ function ThoughtsHistory() {
   const fileInputRef = useRef(null);
 
   useEffect(() => {
-    axios
-      .get(`http://localhost:5000/profile/thoughts-history/${userId}`)
+    api
+      .get(`/profile/thoughts-history/${userId}`)
       .then((res) => setPosts(res.data))
       .catch(() => setPosts([]));
   }, [userId]);
+
 
   useEffect(() => {
     function handleClickOutside(e) {
@@ -101,8 +102,8 @@ function ThoughtsHistory() {
     }
 
     try {
-      const response = await axios.post(
-        "http://localhost:5000/comments/reply",
+      const response = await api.post(
+        "/comments/reply",
         {
           user_id: userId,
           post_id: postId,
@@ -111,14 +112,15 @@ function ThoughtsHistory() {
         }
       );
 
+
       if (response.data.success) {
         setReplyText("");
         setReplyImages([]);
         setIsReplying(null);
         setShowKaomojiPopup(null);
 
-        const updated = await axios.get(
-          `http://localhost:5000/profile/thoughts-history/${userId}`
+        const updated = await api.get(
+          `/profile/thoughts-history/${userId}`
         );
         setPosts(updated.data);
       }
@@ -154,11 +156,12 @@ function ThoughtsHistory() {
                     {post.images.map((img, index) => (
                       <img
                         key={index}
-                        src={`http://localhost:5000/uploads/${img}`}
+                        src={`${api.defaults.baseURL}/uploads/${img}`}
                         alt="post"
                         className="post-image"
                       />
                     ))}
+
                   </div>
                 )}
 
@@ -289,51 +292,51 @@ function ThoughtsHistory() {
 
                           {showKaomojiPopup ===
                             comment.comment_id && (
-                            <div
-                              className="kaomoji-popup"
-                              ref={kaomojiRef}
-                            >
-                              <div className="kaomoji-tabs">
-                                {kaomojiTabs.map((tab) => (
-                                  <button
-                                    key={tab.key}
-                                    className={
-                                      activeKaomojiCategory === tab.key
-                                        ? "kaomoji-tab active"
-                                        : "kaomoji-tab"
-                                    }
-                                    onClick={() =>
-                                      setActiveKaomojiCategory(
-                                        tab.key
-                                      )
-                                    }
-                                  >
-                                    {tab.label}
-                                  </button>
-                                ))}
-                              </div>
+                              <div
+                                className="kaomoji-popup"
+                                ref={kaomojiRef}
+                              >
+                                <div className="kaomoji-tabs">
+                                  {kaomojiTabs.map((tab) => (
+                                    <button
+                                      key={tab.key}
+                                      className={
+                                        activeKaomojiCategory === tab.key
+                                          ? "kaomoji-tab active"
+                                          : "kaomoji-tab"
+                                      }
+                                      onClick={() =>
+                                        setActiveKaomojiCategory(
+                                          tab.key
+                                        )
+                                      }
+                                    >
+                                      {tab.label}
+                                    </button>
+                                  ))}
+                                </div>
 
-                              <div className="kaomoji-list">
-                                {kaomojiCategories[
-                                  activeKaomojiCategory
-                                ].map((icon, index) => (
-                                  <button
-                                    key={index}
-                                    className="kaomoji-item"
-                                    onClick={() =>
-                                      setReplyText((prev) =>
-                                        prev
-                                          ? prev + " " + icon
-                                          : icon
-                                      )
-                                    }
-                                  >
-                                    {icon}
-                                  </button>
-                                ))}
+                                <div className="kaomoji-list">
+                                  {kaomojiCategories[
+                                    activeKaomojiCategory
+                                  ].map((icon, index) => (
+                                    <button
+                                      key={index}
+                                      className="kaomoji-item"
+                                      onClick={() =>
+                                        setReplyText((prev) =>
+                                          prev
+                                            ? prev + " " + icon
+                                            : icon
+                                        )
+                                      }
+                                    >
+                                      {icon}
+                                    </button>
+                                  ))}
+                                </div>
                               </div>
-                            </div>
-                          )}
+                            )}
                         </div>
                       )}
                     </div>

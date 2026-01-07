@@ -5,7 +5,7 @@ import TopBar from "../components/topBar";
 import EmojiPicker from "emoji-picker-react";
 import { useDropzone } from "react-dropzone";
 import kaomojilib from "kaomojilib";
-import axios from "axios";
+import api from "../api";
 
 function buildKaomojiCategories() {
   const kaomojiLibrary = kaomojilib?.library || {};
@@ -105,11 +105,11 @@ function CreatePost() {
     });
 
     try {
-      const response = await axios.post(
-        "http://localhost:5000/posts/create",
-        formData,
-        { headers: { "Content-Type": "multipart/form-data" } }
-      );
+      const response = await api.post(
+  "/posts/create",
+  formData,
+  { headers: { "Content-Type": "multipart/form-data" } }
+);
 
       if (response.data.success) {
         setFeedbackMessage("Post submitted successfully (๑˃̵ᴗ˂̵)و");
