@@ -4,7 +4,7 @@ import { BrowserRouter as Router, Routes, Route, useLocation, Navigate } from "r
 import RequireAuth from "./guards/requireAuth";
 import RedirectIfAuth from "./guards/redirectIfAuth";
 
-import BottomNav from "./components/bottomNav";
+import BottomNav from "./components/BottomNav";
 
 import Feed from "./pages/feed";
 import CreatePost from "./pages/createPost";
@@ -14,6 +14,7 @@ import JournalLog from "./pages/journalLog";
 import Splash from "./pages/splash";
 import ThoughtsHistory from "./pages/thoughtsHistory";
 import Authentication from "./pages/authentication";
+import Login from "./pages/Login";
 
 function AppContent() {
   const location = useLocation();
@@ -31,8 +32,10 @@ function AppContent() {
     return <Splash />;
   }
 
-  const hideNav =
-    location.pathname === "/authentication";
+ const hideNav =
+  location.pathname === "/authentication" ||
+  location.pathname === "/login";
+
 
   return (
     <div className="app-container">
@@ -49,6 +52,15 @@ function AppContent() {
         />
 
         { }
+        <Route
+  path="/login"
+  element={
+    <RedirectIfAuth>
+      <Login />
+    </RedirectIfAuth>
+  }
+/>
+
         <Route
           path="/"
           element={<Navigate to="/feed" replace />}

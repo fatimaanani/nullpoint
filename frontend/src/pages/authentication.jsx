@@ -23,13 +23,12 @@ function Authentication() {
     }
 
     try {
-      await api.post("/authentication/register", {
-  fullName,
-  username,
-  email,
-  password
-});
-
+      const response = await api.post("/authentication/register", {
+        fullName,
+        username,
+        email,
+        password
+      });
 
       if (response.data.success) {
         localStorage.setItem("user_id", response.data.user_id);
@@ -124,6 +123,13 @@ function Authentication() {
             Confirm
           </button>
         </form>
+
+        <p
+          className="authentication-switch-link"
+          onClick={() => navigate("/login")}
+        >
+          Already have an account? Login
+        </p>
 
         {authenticationFeedback && (
           <div className="authentication-status-message">
